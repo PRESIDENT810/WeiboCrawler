@@ -16,13 +16,13 @@ def getTweets():
     html = expandweibo.getHtml(url,total_page=pages)
 
 def main():
-    getTweets()
     inc = 60*int(sys.argv[2])
     circulation(inc)
 
 def circulation(inc):
+    getTweets()
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    t = Timer(inc, getTweets, (inc,))
+    t = Timer(inc, circulation(), (inc,))
     t.start()
 
 main()
