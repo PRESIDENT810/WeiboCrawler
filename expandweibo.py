@@ -73,6 +73,7 @@ def scan_tweets(driver,csv_writer):
 
     for i in range(len(contents)):
         content = contents[i].text
+        print(i)
         # path = contents[i].location
 
         try:
@@ -100,8 +101,8 @@ def scan_tweets(driver,csv_writer):
         except:
             like = 0
         try:
-            raw_time = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[2]/a'.format(i)).text
-            time = time_fix(raw_time)
+            time = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[2]/a'.format(i)).get_attribute("title")
+            # time = time_fix(raw_time)
         except:
             time = "NA"
 
@@ -136,6 +137,10 @@ def span_text(driver):
         try:
             print("find span")
             ActionChains(driver).click(span).perform()
+            try:
+                ActionChains(driver).click(span).perform()
+            except:
+                pass
             time.sleep(5)
         except Exception as e:
             pass
