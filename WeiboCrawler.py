@@ -22,7 +22,7 @@ def main():
 def circulation(inc):
     getTweets()
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    t = Timer(inc, circulation(), (inc,))
+    t = Timer(inc, circulation, (inc,))
     t.start()
 
 main()
