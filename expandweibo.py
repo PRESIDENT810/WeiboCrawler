@@ -3,12 +3,15 @@ from selenium.webdriver.common.action_chains import ActionChains
 import selenium
 import time
 import requests
+import csv
 
 def getHtml(url, loadmore=True, waittime=10, total_page=20):
     req = requests.Session()
     driver = webdriver.Chrome('chromedriver')
     login(driver,req)
     driver.get(url)
+    file = open("result.csv",'w')
+    writer = csv.writer(file)
     for page_cnt in range(total_page):
         cnt = 0
         if loadmore:
@@ -24,7 +27,7 @@ def getHtml(url, loadmore=True, waittime=10, total_page=20):
                 except:
                     break
             span_text(driver)
-            scan_tweets(driver)
+            scan_tweets(driver,writer)
         try:
             next_page = driver.find_element_by_css_selector("[class ='page next S_txt1 S_line1']")
             ActionChains(driver).click(next_page).perform()
@@ -56,14 +59,47 @@ def add_cookie(cookies,req):
     for cookie in cookies:
         req.cookies.set(cookie['name'], cookie['value'])
 
-def scan_tweets(driver):
+def scan_tweets(driver,csv_writer):
     fhand = open('result.txt', 'a')
     post_num = 1
+
     contents = driver.find_elements_by_css_selector('[class ="WB_text W_f14"]')
-    for content in contents:
-        print(post_num,content.text)
-        fhand.write(str(post_num)+": "+content.text)
-        fhand.write('\n')
+    # shares = driver.find_elements_by_css_selector('[class="W_ficon ficon_forward S_ficon"]')
+    # comments = driver.find_elements_by_css_selector('[class="W_ficon ficon_repeat S_ficon"]')
+    # likes = driver.find_elements_by_css_selector('[class="W_ficon ficon_praised S_txt2"]')
+
+    for i in range(len(contents)):
+        content = contents[i].text
+        path = contents[i].location
+
+        try:
+            user_id = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]'.format(i)).get_attribute("tbinfo")[5:]
+        except:
+            user_id = "NA"
+        try:
+            share = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[2]/div/ul/li[2]/a/span/span/span/em[2]'.format(i)).text
+        except:
+            share = 0
+        try:
+            comment = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[2]/div/ul/li[3]/a/span/span/span/em[2]'.format(i)).text
+        except:
+            comment = 0
+        try:
+            like = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[2]/div/ul/li[4]/a/span/span/span/em[2]'.format(i)).text
+        except:
+            like = 0
+
+        # share = shares[i].text
+        # comment = comments[i].text
+        # like = likes[i].text
+        print(user_id)
+        print(post_num,content)
+        print(share)
+        print(comment)
+        print(like)
+        # fhand.write(str(post_num)+": "+content)
+        # fhand.write('\n')
+        csv_writer.writerow([user_id,content,share,comment,like])
         post_num += 1
 
     # fhand = open('result.txt', 'a')
@@ -87,3 +123,5 @@ def span_text(driver):
             time.sleep(5)
         except Exception as e:
             pass
+
+

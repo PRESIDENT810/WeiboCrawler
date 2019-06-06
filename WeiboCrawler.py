@@ -3,6 +3,8 @@ import expandweibo
 import csv
 import time
 import sys
+from datetime import datetime
+from threading import Timer
 
 def getTweets():
     pages = int(sys.argv[1])
@@ -13,4 +15,14 @@ def getTweets():
     html = response.text
     html = expandweibo.getHtml(url,total_page=pages)
 
-getTweets()
+def main():
+    getTweets()
+    inc = 60*int(sys.argv[2])
+    circulation(inc)
+
+def circulation(inc):
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    t = Timer(inc, getTweets, (inc,))
+    t.start()
+
+main()
