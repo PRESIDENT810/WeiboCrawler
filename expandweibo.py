@@ -12,7 +12,8 @@ def getHtml(url, loadmore=True, waittime=10, total_page=20):
     driver = webdriver.Chrome('chromedriver')
     login(driver,req)
     driver.get(url)
-    file = open("result.csv",'w')
+    file_name = "result{}.csv".format(datetime.datetime.now())
+    file = open(file_name,'w')
     writer = csv.writer(file)
     for page_cnt in range(total_page):
         cnt = 0
