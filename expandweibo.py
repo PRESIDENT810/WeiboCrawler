@@ -4,6 +4,8 @@ import selenium
 import time
 import requests
 import csv
+import datetime
+import re
 
 def getHtml(url, loadmore=True, waittime=10, total_page=20):
     req = requests.Session()
@@ -70,8 +72,16 @@ def scan_tweets(driver,csv_writer):
 
     for i in range(len(contents)):
         content = contents[i].text
-        path = contents[i].location
+        # path = contents[i].location
 
+        try:
+            pic = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[6]/div/ul'.format(i))
+            if 'jpg' in pic.get_attribute('action-data'):
+                pic = True
+            else:
+                pic = False
+        except:
+            pic = False
         try:
             user_id = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]'.format(i)).get_attribute("tbinfo")[5:]
         except:
@@ -88,6 +98,11 @@ def scan_tweets(driver,csv_writer):
             like = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[2]/div/ul/li[4]/a/span/span/span/em[2]'.format(i)).text
         except:
             like = 0
+        try:
+            raw_time = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[2]/a'.format(i)).text
+            time = time_fix(raw_time)
+        except:
+            time = "NA"
 
         # share = shares[i].text
         # comment = comments[i].text
@@ -99,7 +114,7 @@ def scan_tweets(driver,csv_writer):
         print(like)
         # fhand.write(str(post_num)+": "+content)
         # fhand.write('\n')
-        csv_writer.writerow([user_id,content,share,comment,like])
+        csv_writer.writerow([user_id,content,share,comment,like,time,pic])
         post_num += 1
 
     # fhand = open('result.txt', 'a')
@@ -124,4 +139,29 @@ def span_text(driver):
         except Exception as e:
             pass
 
+def time_fix(time_string):
+    now_time = datetime.datetime.now()
+    if '秒前' in time_string:
+        minutes = re.search(r'^(\d+)秒', time_string).group(1)
+        created_at = now_time - datetime.timedelta(seconds=int(minutes))
+        return created_at.strftime('%Y-%m-%d %H:%M')
 
+    if '分钟前' in time_string:
+        minutes = re.search(r'^(\d+)分钟', time_string).group(1)
+        created_at = now_time - datetime.timedelta(minutes=int(minutes))
+        return created_at.strftime('%Y-%m-%d %H:%M')
+
+    if '小时前' in time_string:
+        minutes = re.search(r'^(\d+)小时', time_string).group(1)
+        created_at = now_time - datetime.timedelta(hours=int(minutes))
+        return created_at.strftime('%Y-%m-%d %H:%M')
+
+    if '今天' in time_string:
+        return time_string.replace('今天', now_time.strftime('%Y-%m-%d'))
+
+    if '月' in time_string:
+        time_string = time_string.replace('月', '-').replace('日', '')
+        time_string = str(now_time.year) + '-' + time_string
+        return time_string
+
+    return time_string
