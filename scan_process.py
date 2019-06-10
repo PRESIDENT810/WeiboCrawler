@@ -6,25 +6,35 @@ def handle_span(url_list,writer):
     # url_list = fhand.read().split('\n')[:-1]
 
     print("handle span",url_list)
-    req = requests.Session()
-    span_driver = webdriver.Chrome('chromedriver')
-    login(span_driver,req)
-    time.sleep(6)
+    # req = requests.Session()
+    # req.keep_alive = False
+    # span_driver = webdriver.Chrome('chromedriver')
+    # login(span_driver,req)
+    # time.sleep(6)
 
     # file_name = "span_result{}.csv".format(datetime.datetime.now())
     # file = open(file_name,'w')
     # writer = csv.writer(file)
 
+    # for url in url_list:
+    #     time.sleep(3)
+    #     scan_span(url,writer,span_driver)
+
     for url in url_list:
         time.sleep(3)
-        scan_span(url,writer,span_driver)
+        scan_span(url,writer)
 
-def scan_span(url,span_writer,span_driver):
+def scan_span(url,span_writer,span_driver=None):
     print(url)
+
+    req = requests.Session()
+    req.keep_alive = False
+    span_driver = webdriver.Chrome('chromedriver')
+    login(span_driver, req)
 
     span_driver.get(url)
     # time.sleep(6)
-    time.sleep(3)
+    time.sleep(10)
 
     try:
         content = span_driver.find_element_by_xpath('//*[@id="Pl_Official_WeiboDetail__73"]/div/div/div/div[1]/div[4]/div[4]').text
@@ -34,12 +44,11 @@ def scan_span(url,span_writer,span_driver):
                 '//*[@id="Pl_Official_WeiboDetail__73"]/div/div/div/div[1]/div[3]/div[4]').text
         except:
             content = "content error"
-
     try:
         pic = span_driver.find_element_by_xpath(
-            '//*[@id="Pl_Official_WeiboDetail__73"]/div/div/div/div[1]/div[4]/div[5]/div/div[2]/div[1]/ul/li/div/div[1]')
+            '//*[@id="Pl_Official_WeiboDetail__73"]/div/div/div/div[1]/div[4]/div[5]/div/div[2]/div[1]/ul/li/div/div[1]/img')
         print(pic.get_attribute('src'))
-        if 'jpg' in pic.get_attribute('src-data'):
+        if 'jpg' in pic.get_attribute('src'):
             pic = True
         else:
             pic = False
@@ -93,7 +102,7 @@ def scan_span(url,span_writer,span_driver):
     result = [user_id, content, share, comment, like, tweet_time, pic]
     print(result)
     span_writer.writerow([user_id, content, share, comment, like, tweet_time, pic])
-    span_driver.quit()
+    # span_driver.quit()
     return
 
 if __name__ == "__main__":

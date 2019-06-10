@@ -80,15 +80,30 @@ def scan_tweets(driver,csv_writer):
         try:
             share = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[2]/div/ul/li[2]/a/span/span/span/em[2]'.format(i)).text
         except:
-            share = 0
+            try:
+                share = driver.find_element_by_xpath(
+                    '//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[3]/div/ul/li[2]/a/span/span/span/em[2]'.format(
+                        i)).text
+            except:
+                share = 0
         try:
             comment = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[2]/div/ul/li[3]/a/span/span/span/em[2]'.format(i)).text
         except:
-            comment = 0
+            try:
+                comment = driver.find_element_by_xpath(
+                    '//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[3]/div/ul/li[3]/a/span/span/span/em[2]'.format(
+                        i)).text
+            except:
+                comment = 0
         try:
             like = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[2]/div/ul/li[4]/a/span/span/span/em[2]'.format(i)).text
         except:
-            like = 0
+            try:
+                like = driver.find_element_by_xpath(
+                    '//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[3]/div/ul/li[4]/a/span/span/span/em[2]'.format(
+                        i)).text
+            except:
+                like = 0
         try:
             tweet_time = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[2]/a'.format(i)).get_attribute("title")
         except:
