@@ -1,29 +1,30 @@
 from utils import *
+import time
 
-def span_text(driver,span_writer):
-    spans = driver.find_elements_by_css_selector('[class ="WB_text_opt"]')
-    span_urls = []
+def handle_span(url_list,writer):
+    # fhand = open(name,'r')
+    # url_list = fhand.read().split('\n')[:-1]
 
+    print("handle span",url_list)
     req = requests.Session()
     span_driver = webdriver.Chrome('chromedriver')
     login(span_driver,req)
+    time.sleep(6)
 
-    for span in spans:
-        try:
-            print("find span")
-            span_urls.append(span.get_attribute("href"))
-        except Exception as e:
-            pass
+    # file_name = "span_result{}.csv".format(datetime.datetime.now())
+    # file = open(file_name,'w')
+    # writer = csv.writer(file)
 
-    print("span urls",span_urls)
+    for url in url_list:
+        time.sleep(3)
+        scan_span(url,writer,span_driver)
 
-    for url in span_urls:
-        span_writer.writerow(scan_span(url,span_driver))
-    span_driver.quit()
-    return
+def scan_span(url,span_writer,span_driver):
+    print(url)
 
-def scan_span(url,span_driver):
     span_driver.get(url)
+    # time.sleep(6)
+    time.sleep(3)
 
     try:
         content = span_driver.find_element_by_xpath('//*[@id="Pl_Official_WeiboDetail__73"]/div/div/div/div[1]/div[4]/div[4]').text
@@ -76,17 +77,37 @@ def scan_span(url,span_driver):
         like = 0
 
     try:
-        time = span_driver.find_element_by_xpath(
+        tweet_time = span_driver.find_element_by_xpath(
             '//*[@id="Pl_Official_WeiboDetail__73"]/div/div/div/div[1]/div[4]/div[2]/a').get_attribute(
             "title")
         # time = time_fix(raw_time)
     except:
         try:
-            time = span_driver.find_element_by_xpath(
+            tweet_time = span_driver.find_element_by_xpath(
                 '//*[@id="Pl_Official_WeiboDetail__73"]/div/div/div/div[1]/div[3]/div[2]/a').get_attribute(
                 "title")
             # time = time_fix(raw_time)
         except:
-            time = "time error"
+            tweet_time = "time error"
 
-    return [user_id, content, share, comment, like, time, pic]
+    result = [user_id, content, share, comment, like, tweet_time, pic]
+    print(result)
+    span_writer.writerow([user_id, content, share, comment, like, tweet_time, pic])
+    span_driver.quit()
+    return
+
+if __name__ == "__main__":
+    fhand = open("test.txt",'r')
+    url_list = fhand.read().split('\n')[:-1]
+    print(url_list)
+
+    # req = requests.Session()
+    # driver = webdriver.Chrome('chromedriver')
+    # login(driver,req)
+
+    file_name = "span_result{}.csv".format(datetime.datetime.now())
+    file = open(file_name,'w')
+    writer = csv.writer(file)
+
+    for url in url_list:
+        scan_span(url,writer)

@@ -1,4 +1,4 @@
-from scan_process import *
+from scan_process import handle_span
 from utils import *
 
 chrome_options = Options()
@@ -7,16 +7,17 @@ chrome_options.add_argument('--headless')
 def getHtml(url, loadmore=True, waittime=10, total_page=20):
     req = requests.Session()
     driver = webdriver.Chrome('chromedriver')
-    login(driver,req)
+    try:
+        login(driver,req)
+        time.sleep(3)
+    except:
+        pass
+
     driver.get(url)
 
     file_name = "result{}.csv".format(datetime.datetime.now())
     file = open(file_name,'w')
     writer = csv.writer(file)
-
-    file_name = "span_result{}.csv".format(datetime.datetime.now())
-    file = open(file_name,'w')
-    span_writer = csv.writer(file)
 
     for page_cnt in range(total_page):
         cnt = 0
@@ -25,15 +26,15 @@ def getHtml(url, loadmore=True, waittime=10, total_page=20):
                 try:
                     js = "document.documentElement.scrollTop=250000"
                     driver.execute_script(js)
-                    time.sleep(waittime)
+                    time.sleep(2)
                     cnt += 1
                     print("page {}, span part {}".format(page_cnt,cnt))
-                    if cnt == 5:
+                    if cnt == 3:
                         break
                 except:
                     break
             scan_tweets(driver,writer)
-            span_text(driver,span_writer)
+            span_text(driver,writer)
         try:
             next_page = driver.find_element_by_css_selector("[class ='page next S_txt1 S_line1']")
             ActionChains(driver).click(next_page).perform()
@@ -43,10 +44,10 @@ def getHtml(url, loadmore=True, waittime=10, total_page=20):
 
     file.close()
     driver.quit()
+
     # return html
 
 def scan_tweets(driver,csv_writer):
-    fhand = open('result.txt', 'a')
     post_num = 1
 
     contents = driver.find_elements_by_css_selector('[class ="WB_text W_f14"]')
@@ -89,14 +90,14 @@ def scan_tweets(driver,csv_writer):
         except:
             like = 0
         try:
-            time = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[2]/a'.format(i)).get_attribute("title")
+            tweet_time = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[2]/a'.format(i)).get_attribute("title")
         except:
             try:
-                time = driver.find_element_by_xpath(
+                tweet_time = driver.find_element_by_xpath(
                     '//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[4]/div[2]/a'.format(
                         i)).get_attribute("title")
             except:
-                time = "NA"
+                tweet_time = "NA"
 
         # print('\n',"-------------------------------------------"*2,'\n')
         # print("i",i)
@@ -109,5 +110,41 @@ def scan_tweets(driver,csv_writer):
         # print("pic number",pic)
 
         if "展开全文" not in content:
-            csv_writer.writerow([user_id,content,share,comment,like,time,pic])
+            csv_writer.writerow([user_id,content,share,comment,like,tweet_time,pic])
         post_num += 1
+
+def span_text(driver,writer):
+    spans = driver.find_elements_by_css_selector('[class ="WB_text_opt"]')
+    span_urls = []
+
+    fhand = open("test.txt",'w')
+
+    # req = requests.Session()
+    # span_driver = webdriver.Chrome('chromedriver')
+    # login(span_driver,req)
+
+    for span in spans:
+        try:
+            print("find span")
+            span_urls.append(span.get_attribute("href"))
+        except Exception as e:
+            pass
+
+    if len(span_urls) == 0:
+        return
+
+    print("span urls",span_urls)
+
+    for url in span_urls:
+        fhand.write(url)
+        fhand.write('\n')
+
+
+    # for url in span_urls:
+    #     scan_span(url,span_driver,span_writer)
+    # span_driver.close()
+
+    handle_span(span_urls,writer)
+    fhand.close()
+
+    return
