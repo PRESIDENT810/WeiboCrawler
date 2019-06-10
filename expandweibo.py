@@ -51,8 +51,8 @@ def getHtml(url, loadmore=True, waittime=10, total_page=20):
 def login(driver,req):
     driver.get("http://www.weibo.com/login.php")
     time.sleep(3)
-    driver.find_element_by_xpath('//*[@id="loginname"]').send_keys('user-id')  # 输入用户名
-    driver.find_element_by_xpath('//*[@id="pl_login_form"]/div/div[3]/div[2]/div/input').send_keys('password')  # 输入密码
+    driver.find_element_by_xpath('//*[@id="loginname"]').send_keys('3034252785@qq.com')  # 输入用户名
+    driver.find_element_by_xpath('//*[@id="pl_login_form"]/div/div[3]/div[2]/div/input').send_keys('residentevil')  # 输入密码
     driver.find_element_by_xpath('//*[@id="pl_login_form"]/div/div[3]/div[6]/a').click()  # 点击登陆
     cookies = driver.get_cookies()
     add_cookie(cookies, req)
@@ -73,17 +73,43 @@ def scan_tweets(driver,csv_writer):
 
     for i in range(len(contents)):
         content = contents[i].text
-        print(i)
+        i += 1
+        print('\n',"-------------------------------------------"*2,'\n')
+        print("i",i)
         # path = contents[i].location
 
+        ## fuck this, use alternative method to get pic
         try:
             pic = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[6]/div/ul'.format(i))
+            print(pic.get_attribute('action-data'))
             if 'jpg' in pic.get_attribute('action-data'):
                 pic = True
             else:
                 pic = False
         except:
-            pic = False
+            try:
+                pic = driver.find_element_by_xpath(
+                    '//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[4]/div[6]/div/ul'.format(i))
+                print(pic.get_attribute('action-data'))
+                if 'jpg' in pic.get_attribute('action-data'):
+                    pic = True
+                else:
+                    pic = False
+            except:
+                print("get pic error")
+                pic = False
+
+        # try:
+        #     pic_element = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[6]/div'.format(i))
+        #     pic_comment = pic_element.text
+        #     print("pic_comment",type(pic_comment))
+        #     if "picture_count" in pic_comment:
+        #         pic = pic_comment[21]
+        #     else:
+        #         pic = 0
+        # except:
+        #     pic = 0
+
         try:
             user_id = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]'.format(i)).get_attribute("tbinfo")[5:]
         except:
@@ -109,11 +135,13 @@ def scan_tweets(driver,csv_writer):
         # share = shares[i].text
         # comment = comments[i].text
         # like = likes[i].text
-        print(user_id)
-        print(post_num,content)
-        print(share)
-        print(comment)
-        print(like)
+        print("post number",post_num)
+        print("user id: ",user_id)
+        print("content: ",content)
+        print("share",share)
+        print("comment",comment)
+        print("like",like)
+        print("pic number",pic)
         # fhand.write(str(post_num)+": "+content)
         # fhand.write('\n')
         csv_writer.writerow([user_id,content,share,comment,like,time,pic])
@@ -132,18 +160,19 @@ def scan_tweets(driver,csv_writer):
     #         continue
 
 def span_text(driver):
-    spans = driver.find_elements_by_css_selector('[class ="WB_text_opt"]')
-    for span in spans:
-        try:
-            print("find span")
-            ActionChains(driver).click(span).perform()
-            try:
-                ActionChains(driver).click(span).perform()
-            except:
-                pass
-            time.sleep(5)
-        except Exception as e:
-            pass
+    # spans = driver.find_elements_by_css_selector('[class ="WB_text_opt"]')
+    # for span in spans:
+    #     try:
+    #         print("find span")
+    #         ActionChains(driver).click(span).perform()
+    #         # try:
+    #         #     ActionChains(driver).click(span).perform()
+    #         # except:
+    #         #     pass
+    #         time.sleep(5)
+    #     except Exception as e:
+    #         pass
+    return
 
 def time_fix(time_string):
     now_time = datetime.datetime.now()
