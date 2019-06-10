@@ -1,20 +1,23 @@
-from selenium import webdriver
-from selenium.webdriver.common.action_chains import ActionChains
-import selenium
-import time
-import requests
-import csv
-import datetime
-import re
+from scan_process import *
+from utils import *
+
+chrome_options = Options()
+chrome_options.add_argument('--headless')
 
 def getHtml(url, loadmore=True, waittime=10, total_page=20):
     req = requests.Session()
     driver = webdriver.Chrome('chromedriver')
     login(driver,req)
     driver.get(url)
+
     file_name = "result{}.csv".format(datetime.datetime.now())
     file = open(file_name,'w')
     writer = csv.writer(file)
+
+    file_name = "span_result{}.csv".format(datetime.datetime.now())
+    file = open(file_name,'w')
+    span_writer = csv.writer(file)
+
     for page_cnt in range(total_page):
         cnt = 0
         if loadmore:
@@ -29,59 +32,31 @@ def getHtml(url, loadmore=True, waittime=10, total_page=20):
                         break
                 except:
                     break
-            span_text(driver)
             scan_tweets(driver,writer)
+            span_text(driver,span_writer)
         try:
             next_page = driver.find_element_by_css_selector("[class ='page next S_txt1 S_line1']")
             ActionChains(driver).click(next_page).perform()
             time.sleep(waittime)
-        except selenium.common.exceptions.NoSuchElementException:
+        except:
             driver.refresh()
-            # for i in range(10):
-            #     js = "document.documentElement.scrollTop=250000"
-            #     driver.execute_script(js)
-            #     time.sleep(15)
-            # next_page = driver.find_element_by_css_selector("[class ='page next S_txt1 S_line1']")
-            # ActionChains(driver).click(next_page).perform()
-            # time.sleep(waittime)
 
+    file.close()
     driver.quit()
     # return html
-
-def login(driver,req):
-    driver.get("http://www.weibo.com/login.php")
-    time.sleep(3)
-    driver.find_element_by_xpath('//*[@id="loginname"]').send_keys('3034252785@qq.com')  # 输入用户名
-    driver.find_element_by_xpath('//*[@id="pl_login_form"]/div/div[3]/div[2]/div/input').send_keys('residentevil')  # 输入密码
-    driver.find_element_by_xpath('//*[@id="pl_login_form"]/div/div[3]/div[6]/a').click()  # 点击登陆
-    cookies = driver.get_cookies()
-    add_cookie(cookies, req)
-    time.sleep(5)
-
-def add_cookie(cookies,req):
-    for cookie in cookies:
-        req.cookies.set(cookie['name'], cookie['value'])
 
 def scan_tweets(driver,csv_writer):
     fhand = open('result.txt', 'a')
     post_num = 1
 
     contents = driver.find_elements_by_css_selector('[class ="WB_text W_f14"]')
-    # shares = driver.find_elements_by_css_selector('[class="W_ficon ficon_forward S_ficon"]')
-    # comments = driver.find_elements_by_css_selector('[class="W_ficon ficon_repeat S_ficon"]')
-    # likes = driver.find_elements_by_css_selector('[class="W_ficon ficon_praised S_txt2"]')
 
     for i in range(len(contents)):
         content = contents[i].text
         i += 1
-        print('\n',"-------------------------------------------"*2,'\n')
-        print("i",i)
-        # path = contents[i].location
 
-        ## fuck this, use alternative method to get pic
         try:
             pic = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[6]/div/ul'.format(i))
-            print(pic.get_attribute('action-data'))
             if 'jpg' in pic.get_attribute('action-data'):
                 pic = True
             else:
@@ -90,25 +65,12 @@ def scan_tweets(driver,csv_writer):
             try:
                 pic = driver.find_element_by_xpath(
                     '//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[4]/div[6]/div/ul'.format(i))
-                print(pic.get_attribute('action-data'))
                 if 'jpg' in pic.get_attribute('action-data'):
                     pic = True
                 else:
                     pic = False
             except:
-                print("get pic error")
                 pic = False
-
-        # try:
-        #     pic_element = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[6]/div'.format(i))
-        #     pic_comment = pic_element.text
-        #     print("pic_comment",type(pic_comment))
-        #     if "picture_count" in pic_comment:
-        #         pic = pic_comment[21]
-        #     else:
-        #         pic = 0
-        # except:
-        #     pic = 0
 
         try:
             user_id = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]'.format(i)).get_attribute("tbinfo")[5:]
@@ -128,75 +90,24 @@ def scan_tweets(driver,csv_writer):
             like = 0
         try:
             time = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[2]/a'.format(i)).get_attribute("title")
-            # time = time_fix(raw_time)
         except:
-            time = "NA"
+            try:
+                time = driver.find_element_by_xpath(
+                    '//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[4]/div[2]/a'.format(
+                        i)).get_attribute("title")
+            except:
+                time = "NA"
 
-        # share = shares[i].text
-        # comment = comments[i].text
-        # like = likes[i].text
-        print("post number",post_num)
-        print("user id: ",user_id)
-        print("content: ",content)
-        print("share",share)
-        print("comment",comment)
-        print("like",like)
-        print("pic number",pic)
-        # fhand.write(str(post_num)+": "+content)
-        # fhand.write('\n')
-        csv_writer.writerow([user_id,content,share,comment,like,time,pic])
+        # print('\n',"-------------------------------------------"*2,'\n')
+        # print("i",i)
+        # print("post number",post_num)
+        # print("user id: ",user_id)
+        # print("content: ",content)
+        # print("share",share)
+        # print("comment",comment)
+        # print("like",like)
+        # print("pic number",pic)
+
+        if "展开全文" not in content:
+            csv_writer.writerow([user_id,content,share,comment,like,time,pic])
         post_num += 1
-
-    # fhand = open('result.txt', 'a')
-    # post_num = 1
-    # while post_num!=50:
-    #     try:
-    #         content = driver.find_element_by_xpath('//*[@id="Pl_Core_MixedFeed__291"]/div/div[3]/div[{}]/div[1]/div[3]/div[4]'.format(post_num))
-    #         print("content",post_num,content.text)
-    #         fhand.write(str(post_num)+": "+content.text+'\n')
-    #         post_num+=1
-    #     except:
-    #         post_num+=1
-    #         continue
-
-def span_text(driver):
-    # spans = driver.find_elements_by_css_selector('[class ="WB_text_opt"]')
-    # for span in spans:
-    #     try:
-    #         print("find span")
-    #         ActionChains(driver).click(span).perform()
-    #         # try:
-    #         #     ActionChains(driver).click(span).perform()
-    #         # except:
-    #         #     pass
-    #         time.sleep(5)
-    #     except Exception as e:
-    #         pass
-    return
-
-def time_fix(time_string):
-    now_time = datetime.datetime.now()
-    if '秒前' in time_string:
-        minutes = re.search(r'^(\d+)秒', time_string).group(1)
-        created_at = now_time - datetime.timedelta(seconds=int(minutes))
-        return created_at.strftime('%Y-%m-%d %H:%M')
-
-    if '分钟前' in time_string:
-        minutes = re.search(r'^(\d+)分钟', time_string).group(1)
-        created_at = now_time - datetime.timedelta(minutes=int(minutes))
-        return created_at.strftime('%Y-%m-%d %H:%M')
-
-    if '小时前' in time_string:
-        minutes = re.search(r'^(\d+)小时', time_string).group(1)
-        created_at = now_time - datetime.timedelta(hours=int(minutes))
-        return created_at.strftime('%Y-%m-%d %H:%M')
-
-    if '今天' in time_string:
-        return time_string.replace('今天', now_time.strftime('%Y-%m-%d'))
-
-    if '月' in time_string:
-        time_string = time_string.replace('月', '-').replace('日', '')
-        time_string = str(now_time.year) + '-' + time_string
-        return time_string
-
-    return time_string
