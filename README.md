@@ -4,7 +4,7 @@ YCY weibo crawler
 Selenium爬取新浪微博超级话题微博
 
 #### 1. Run the program:
-First, you need to change user name and password in expandweibo.py, then
+First, you need to change user name and password in <b>utils.py</b>, then
 ```bash
 $python3 WeiboCrawler.py page_number time_interval
 ```

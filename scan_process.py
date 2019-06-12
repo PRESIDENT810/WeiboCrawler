@@ -32,9 +32,16 @@ def scan_span(url,span_writer,span_driver=None):
     span_driver = webdriver.Chrome('chromedriver')
     login(span_driver, req)
 
-    span_driver.get(url)
-    # time.sleep(6)
-    time.sleep(10)
+    try:
+        time.sleep(5)
+        span_driver.get(url)
+        time.sleep(10)
+    except:
+        span_driver.close()
+        time.sleep(15)
+        scan_span(url,span_writer)
+        return
+
 
     try:
         content = span_driver.find_element_by_xpath('//*[@id="Pl_Official_WeiboDetail__73"]/div/div/div/div[1]/div[4]/div[4]').text
@@ -102,7 +109,7 @@ def scan_span(url,span_writer,span_driver=None):
     result = [user_id, content, share, comment, like, tweet_time, pic]
     print(result)
     span_writer.writerow([user_id, content, share, comment, like, tweet_time, pic])
-    # span_driver.quit()
+    span_driver.close()
     return
 
 if __name__ == "__main__":

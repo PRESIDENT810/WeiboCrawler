@@ -11,7 +11,7 @@ from selenium.webdriver.chrome.options import Options
 def login(driver,req):
     driver.get("http://www.weibo.com/login.php")
     time.sleep(2)
-    driver.find_element_by_xpath('//*[@id="loginname"]').send_keys('user name')  # 输入用户名
+    driver.find_element_by_xpath('//*[@id="loginname"]').send_keys('username')  # 输入用户名
     driver.find_element_by_xpath('//*[@id="pl_login_form"]/div/div[3]/div[2]/div/input').send_keys('password')  # 输入密码
     driver.find_element_by_xpath('//*[@id="pl_login_form"]/div/div[3]/div[6]/a').click()  # 点击登陆
     cookies = driver.get_cookies()
